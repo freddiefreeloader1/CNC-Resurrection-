@@ -1,0 +1,5 @@
+There will be a ROS2 based handwheel to control the steppers. 
+We will use microROS.
+Depending on the situation, it may be transformed into an universal remote.
+There will be 1 CNC restoration. 
+
