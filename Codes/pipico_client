@@ -1,0 +1,50 @@
+import network
+import socket
+import time
+from machine import Pin, PWM
+import socket
+
+wlan = network.WLAN(network.STA_IF)
+wlan.active(True)
+wlan.connect("POCO X3 Pro","123456789")
+time.sleep(5)
+print(wlan.isconnected())
+print(wlan.ifconfig()[2])
+
+# Open socket
+
+SERVER_IP = '192.168.73.60'
+PORT = 5151   
+# Create a socket object
+client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+# Connect to the server socket
+try:
+    client_socket.connect((SERVER_IP, PORT))
+except OSError as e:
+    print(f"Error connecting to server: {e}")
+
+# Send data to the server
+FORMAT = 'utf-8'
+HEADER = 2048
+def send(msg):
+    message = msg.encode(FORMAT)
+    msg_length = len(message)
+    send_length = str(msg_length).encode(FORMAT)
+    send_length += b' ' * (HEADER - len(send_length))
+    #client_socket.send(send_length)
+    client_socket.send(message)
+    print(client_socket.recv(2048).decode(FORMAT))
+
+
+send("Hello, World")
+
+
+# Receive a response from the server
+data = client_socket.recv(1024)
+
+# Print the response from the server
+print(data)
+
+# Close the client socket connection
+client_socket.close()
