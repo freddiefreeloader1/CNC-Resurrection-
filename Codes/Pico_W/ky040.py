@@ -12,13 +12,12 @@ import socket
 ################################################# CONNECTION
 wlan = network.WLAN(network.STA_IF)
 wlan.active(True)
-# wlan.connect("SUPERONLINE_WiFi_3659","vujnDFh4PbeH")
-wlan.connect("POCO X3 Pro" ,"123456789")
+wlan.connect("****" ,"****")
 time.sleep(5)
 print(wlan.isconnected())
 # # # # # # # # ############################## opening socket
-SERVER_IP = '192.168.174.60'
-PORT = 5151   
+SERVER_IP = '*****'
+PORT = ****  
 # Create a socket object
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
