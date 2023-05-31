@@ -12,11 +12,11 @@ import socket
 ################################################# CONNECTION
 wlan = network.WLAN(network.STA_IF)
 wlan.active(True)
-wlan.connect("****" ,"****")
+wlan.connect("Name of the network" ,"password")
 time.sleep(5)
 print(wlan.isconnected())
 # # # # # # # # ############################## opening socket
-SERVER_IP = '*****'
+SERVER_IP = 'Global IP adress'
 PORT = ****  
 # Create a socket object
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
