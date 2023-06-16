@@ -9,8 +9,9 @@ Stepper Pairs:
 -Pins BH and Pins DF
 
 CNC Milling Machine Specs:
+
 -Pitch of the lead screws : 1mm
--UGS Parameters:
---Step size of axes : 800pulse/mm
---Max Travel Rate : 150
+UGS Parameters:
+-Step size of axes : 800pulse/mm
+-Max Travel Rate : 150
 Do not increase feed rate more than 100mm/min. It staggers motors because motors cannot catch that pulse speed.
