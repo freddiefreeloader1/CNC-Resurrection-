@@ -1,28 +1,19 @@
-# Copyright 2016 Open Source Robotics Foundation, Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
 import rclpy
 from rclpy.node import Node
 import socket
 from std_msgs.msg import String
+import serial
+import time 
 
+global j_val
+j_val = "[0, 0]"
 
 class MinimalPublisher(Node):
 
-    def __init__(self):
+    def __init__(self, topic_name):
         super().__init__('minimal_publisher')
-        self.publisher_ = self.create_publisher(String, 'trial', 10)
+        self.publisher_ = self.create_publisher(String, topic_name, 10)
         timer_period = 0.5  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
         self.i = 0
@@ -44,13 +35,19 @@ class MinimalPublisher(Node):
 
 def main(args=None):
 
+    global j_val
+    com = serial.Serial('/dev/ttyUSB0',baudrate=115200)
+    com.write(str.encode("\r\n\r\n")) # wake up grbl
+   
+
     serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM);
     serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    serverSocket.bind(("192.168.1.17",5151))
+    serverSocket.bind(("192.168.1.100",5151))
 
     rclpy.init(args=args)
 
-    minimal_publisher = MinimalPublisher()
+    minimal_publisher = MinimalPublisher("trial")
+    heart_beat_publisher = MinimalPublisher("heartbeat")
 
     while(True):
 
@@ -65,10 +62,72 @@ def main(args=None):
     while(True):
 
         dataFromClient = str(clientConnected.recv(1024).decode())
+        if "HB" in dataFromClient:
+            dataFromClient = dataFromClient.replace("HB","")
 
-        print(dataFromClient)
+        # print(j_val)
+
         if dataFromClient != "":
-            minimal_publisher.publish_data(dataFromClient)
+            heart_beat_publisher.publish_data("HB")
+            if dataFromClient.replace("HB","") != "":
+                minimal_publisher.publish_data(dataFromClient.replace("HB",""))
+        
+
+        # print(dataFromClient)
+        ######################################### joystick
+        if len(dataFromClient) == 6 or len(dataFromClient) == 7:
+            if dataFromClient == "[0, 0]":
+                j_val = "[0, 0]"
+
+            if dataFromClient == "[0, 0]" or j_val == "[0, 0]":
+                j_val = "[0, 0]"
+                com.write(str.encode("G91 G0 X0\r\n"))
+
+            if dataFromClient == "[1, 0]" or j_val == "[1, 0]":
+                j_val = "[1, 0]"
+                com.write(str.encode("G91 G0 X0.3\r\n"))
+            
+            if dataFromClient == "[0, 0]" or j_val == "[0, 0]":
+                j_val = "[0, 0]"
+                com.write(str.encode("G91 G0 X0\r\n"))
+    
+            if dataFromClient == "[-1, 0]" or j_val ==  "[-1, 0]":
+                j_val = "[-1, 0]"
+                com.write(str.encode("G91 G0 X-0.3\r\n"))
+
+            if dataFromClient == "[0, 0]" or j_val == "[0, 0]":
+                j_val = "[0, 0]"
+                com.write(str.encode("G91 G0 X0\r\n"))       
+            if dataFromClient == "[0, 1]" or j_val == "[0, 1]":
+                j_val = "[0, 1]"
+                com.write(str.encode("G91 G0 Y0.3\r\n"))
+            if dataFromClient == "[0, 0]" or j_val == "[0, 0]":
+                j_val = "[0, 0]"
+                com.write(str.encode("G91 G0 X0\r\n"))  
+
+            if dataFromClient == "[0, -1]" or j_val ==  "[0, -1]":
+                j_val = "[0, -1]"
+                com.write(str.encode("G91 G0 Y-0.3\r\n"))
+        ################################################## encoder
+
+        '''if "|" in dataFromClient and "X" not in dataFromClient:
+            datalist = dataFromClient.split("|")
+            datalist.pop(-1)
+            if len(datalist) == 1:
+                laststep = int(datalist[1])
+            if len(datalist) != 0:
+                datalist = [int(i) for i in datalist]
+                stepsize = (datalist[-1] - datalist[1])/10'''
+        
+        print(dataFromClient)                
+
+
+    
+
+
+        '''else:
+            if dataFromClient == "HB":
+                heart_beat_publisher.publish_data("HB")'''
 
 
 
@@ -76,9 +135,7 @@ def main(args=None):
 
 
 
-    # Destroy the node explicitly
-    # (optional - otherwise it will be done automatically
-    # when the garbage collector destroys the node object)
+
 
 
 
