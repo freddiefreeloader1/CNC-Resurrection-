@@ -13,11 +13,11 @@ import socket
 wlan = network.WLAN(network.STA_IF)
 wlan.active(True)
 # wlan.connect("SUPERONLINE_WiFi_3659","vujnDFh4PbeH")
-wlan.connect("POCO X3 Pro" ,"123456789")
-time.sleep(5)
+wlan.connect("mechalab_intra" ,"mechastudent")
+time.sleep(10)
 print(wlan.isconnected())
 # # # # # # # # ############################## opening socket
-SERVER_IP = '192.168.113.61'
+SERVER_IP = '192.168.1.100'
 PORT = 5151   
 # Create a socket object
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -27,8 +27,30 @@ try:
     client_socket.connect((SERVER_IP, PORT))
 except OSError as e:
     print(f"Error connecting to server: {e}")
+###################################################### qrd
+global val1
+global rot
+val1 = 0
+old_val1 = 0
+rot = 0
+old_qrd_list = []
 
-#####################################################33 
+
+def callback_qrd1(qrd1):
+    
+    global val1
+    global rot
+    
+    if rot == "R":
+        val1 += 1
+    if rot == "L":
+        val1 -= 1
+
+qrd1 = Pin(13,Pin.IN)
+qrd2 = Pin(14,Pin.IN)
+
+qrd1.irq(trigger = Pin.IRQ_FALLING, handler = callback_qrd1)
+##################################################### buttons
 ButtonR = Pin(22,Pin.IN,Pin.PULL_UP)
 
 
@@ -97,13 +119,13 @@ vry = ADC(Pin(27))
 def create_array(xval,yval):
     xnum = 0
     ynum = 0
-    if xval > 64000:
+    if xval > 63000:
         xnum = 1
-    if yval > 64000:
+    if yval > 63000:
         ynum = 1
-    if xval < 5000:
+    if xval < 10000:
         xnum = -1
-    if yval < 5000:
+    if yval < 10000:
         ynum = -1
     return [xnum,ynum]
 #######################################################################################################
@@ -112,7 +134,7 @@ def interruption_handler(timer):
     client_socket.send("HB".encode())
 
 
-soft_timer = Timer(mode=Timer.PERIODIC, period=1000, callback=interruption_handler)
+#soft_timer = Timer(mode=Timer.PERIODIC, period=5, callback=interruption_handler)
 ################################Buzzer
 buzz = PWM(Pin(4))
 buzz.freq(1000)
@@ -126,25 +148,62 @@ tft = gc9a01.GC9A01(
     rotation=0)
 
 
-r = RotaryIRQ(pin_num_clk=13,
+'''r = RotaryIRQ(pin_num_clk=13,
               pin_num_dt=12,
               min_val=0,
               max_val=36,
               reverse=False,
-              range_mode=RotaryIRQ.RANGE_WRAP)
+              range_mode=RotaryIRQ.RANGE_WRAP)'''
 
 data = {"joystick":"", "encoder":"","axis":"","axisJ":""}
-val_old = r.value()
+val_old = val1
 tft.fill(0)
 old_val_new = 0
 data_k = ""
 old_data = {"joystick":"", "encoder":"","axis":"","axisJ":""}
 while True:
+    qrd_list = [qrd1.value(),qrd2.value()]
+    time.sleep(0.01)
+    
+    if old_qrd_list != qrd_list:
+        
+        if old_qrd_list == [0,0]:
+            if qrd_list == [0,1]:
+                rot = "R"
+        if old_qrd_list == [0,1]:
+            if qrd_list == [1,1]:
+                rot = "R"
+        if old_qrd_list == [1,1]:
+            if qrd_list == [1,0]:
+                rot = "R"
+        if old_qrd_list == [1,0]:
+            if qrd_list == [0,0]:
+                rot = "R"
+                
+        if old_qrd_list == [0,0]:
+            if qrd_list == [1,0]:
+                rot = "L"
+        if old_qrd_list == [0,1]:
+            if qrd_list == [0,0]:
+                rot = "L"
+        if old_qrd_list == [1,1]:
+            if qrd_list == [0,1]:
+                rot = "L"
+        if old_qrd_list == [1,0]:
+            if qrd_list == [1,1]:
+                rot = "L"
+    
+    if old_val1 != val1:
+        print(val1)
+    
+    old_val1 = val1
+    
+    old_qrd_list = qrd_list
     
     xval = vrx.read_u16()
     yval = vry.read_u16()
     data_j = str(create_array(xval,yval))
-    val_new = r.value()
+    val_new = val1
     lcd(tft,axisJ[counterY],105,70,10000)
     lcd(tft,axis[counter],80,70,10000)   
     if val_old != val_new:
@@ -152,6 +211,11 @@ while True:
         lcd(tft,".",int(90*cos(old_val_new/5.75))+110,int(90*sin(old_val_new/5.75)+110),0)
 
         tft.fill_rect(100, 110, 70,30, 0)
+        if (val_new - val_old) < 0:
+            data["encoder"] = -((-(val_new - val_old))%36)
+        else:
+            data["encoder"] = (val_new - val_old)%36
+        print(data["encoder"])
         val_old = val_new
         # print('result =', val_new)
         data_k = str(val_new*10)
@@ -160,7 +224,6 @@ while True:
         old_val_new = val_new
     buzz.duty_u16(0)
     data["joystick"] = data_j
-    data["encoder"] = data_k + "|"
     data["axis"] = axis[counter]
     data["axisJ"] = axisJ[counterY]
     if data["joystick"] != old_data["joystick"]:
@@ -171,7 +234,12 @@ while True:
         client_socket.send(str(data["axis"]).encode())
     if data["axisJ"] != old_data["axisJ"]:
         client_socket.send(str(data["axisJ"]).encode())
+    
+    old_val1 = val1
+    
+    old_qrd_list = qrd_list
+    
     old_data = data.copy()
-
+    
     time.sleep_ms(1)
     
