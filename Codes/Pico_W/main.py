@@ -26,8 +26,10 @@ time.sleep(10)
 print(wlan.isconnected())
 if wlan.isconnected() == True:
     lcd(tft, "wifi: Active", 10,100,15000)
+    time.sleep(2)
 else:
     lcd(tft, "wifi: Error ", 50,100,15000)
+    time.sleep(2)
 
 # # # # # # # # ############################## opening socket
 SERVER_IP = '192.168.1.100'
@@ -129,15 +131,15 @@ def interruption_handler(timer):
     client_socket.send("HB".encode())
 
 
-#soft_timer = Timer(mode=Timer.PERIODIC, period=5, callback=interruption_handler)
+soft_timer = Timer(mode=Timer.PERIODIC, period=5, callback=interruption_handler)
 ################################Buzzer
-buzz = PWM(Pin(4))
+buzz = PWM(Pin(10))
 buzz.freq(1000)
 ###############################
 
 
-r = RotaryIRQ(pin_num_clk=22,
-              pin_num_dt=13,
+r = RotaryIRQ(pin_num_clk=13,
+              pin_num_dt=22,
               min_val=0,
               max_val=36,
               reverse=False,
@@ -152,6 +154,7 @@ old_data = {"joystick":"", "encoder":"","axis":"","axisJ":""}
 lcd(tft, "Socket: Active", 10,130,15000)
 time.sleep(1)
 tft.fill(0)
+client_socket.send("X".encode())
 time.sleep(0.5)
 while True:
 
@@ -163,9 +166,11 @@ while True:
     val_new = r.value()
     lcd(tft,axisJ[counterY],105,70,10000)
     lcd(tft,axis[counter],80,70,10000)
-    lcd(tft,"%",90,100,10000)   
-    lcd(tft,str(batPer),120,100,15000)  
+    lcd(tft,"%",106,180,15000)
+    lcd(tft,"Bat",100,150,30000)
+    lcd(tft,str(batPer),120,180,15000)  
     if val_old != val_new:
+        client_socket.send(str(data["encoder"]).encode())
         buzz.duty_u16(50000)
         lcd(tft,".",int(90*cos(old_val_new/5.75))+110,int(90*sin(old_val_new/5.75)+110),0)
 
@@ -187,8 +192,6 @@ while True:
     data["axisJ"] = axisJ[counterY]
     if data["joystick"] != old_data["joystick"]:
         client_socket.send(str(data["joystick"]).encode())
-    if data["encoder"] != old_data["encoder"]:
-        client_socket.send(str(data["encoder"]).encode())
     if data["axis"] != old_data["axis"]:
         client_socket.send(str(data["axis"]).encode())
     if data["axisJ"] != old_data["axisJ"]:
