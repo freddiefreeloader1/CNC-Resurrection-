@@ -41,8 +41,10 @@ The Remote Controller project offers a comprehensive solution for remote control
 
 How To Configure The Remote Controller:
 
-1- There is an opening at the side of the controller that you can connect the Pi Pico W to PC and configure the main.py 
+1- There is an opening at the side of the controller that you can connect the Pi Pico W to PC and configure the main.py
+
 2- In main.py, to configure the menu, you can change functions named other2, other3 to suit your needs. You can change the format of the messages sent there. 
+
 3- You also need the to configure the ros2 node. Currently the publisher_member_function only supports the CNC applications. To change it, you need to delete all the code that has serial send in it. You should write your own parsing code for the customized messages you have written in step 2. 
 
 
