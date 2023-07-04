@@ -17,6 +17,7 @@ tft = gc9a01.GC9A01(
     reset=Pin(19, Pin.OUT),
     rotation=3)
 tft.fill(0)
+lcd(tft,"Merhaba",50,100,40000)
 ################################################# CONNECTION
 wlan = network.WLAN(network.STA_IF)
 wlan.active(True)
@@ -24,6 +25,7 @@ wlan.connect("mechalab_intra" ,"mechastudent")        # enter your own network i
 time.sleep(15)                                        # waiting time for wifi connection
 print(wlan.isconnected())
 if wlan.isconnected() == True:
+    tft.fill(0)
     lcd(tft, "wifi: Active", 10,100,15000)
     time.sleep(2)
 else:
