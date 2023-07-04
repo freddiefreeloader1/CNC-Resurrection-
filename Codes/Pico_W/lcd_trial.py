@@ -25,9 +25,9 @@ def write_lcd(tft,data,xpos,ypos,color):
     
     # tft.rotation(2)
 
-
+    # fill here as you wish
     
-    tft.text(
+    tft.text(                        
             font,
             data,
             xpos,
