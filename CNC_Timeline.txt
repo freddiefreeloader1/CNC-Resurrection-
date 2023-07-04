@@ -1,0 +1,16 @@
+In this project, an inactive, desktop cnc milling machine is refurbished.
+Refurbishment done on several steps. The sequential timeline of process is as follows:
+1-	Milling machine is disassembled from its chassis and cleaned.
+2-	Cabling is disassembled.
+3-	Disassembled cabling is analyzed using multimeter.
+4-	Axis actuator stepper motors are disassembled and tested via L298N driver and Arduino
+5-	All motors were working. Then new control circuitry is built.
+6-	New control circuitry contains 3 TB6600 stepper drivers and an Arduino uno.
+7-	Arduino Uno runs GRBL software and it is connected to Universal GCode Sender (UGS)
+8-	 Control circuitry is built on a piece of wood slab.
+9-	Old cables are used in motor connections and useless cables are stored in ME462 lab
+10-	Circuitry is connected via connectors and terminals. No hard connection is done for modularity
+11-	Power of the system is supplied by an old 250W PC PSU. 
+12-	A connector is put on PSU cables and control circuitry to allow easy power connection.
+13-	After whole system is prepared, lots of tests were done for accuracy and repeatability.
+14-	Test results are showed that pitch of the screw mills was 1mm and stepper motors and TB6600 drivers are only capable of sustaining 100mm/min feed rate when ¼ microstepping is applied. 
