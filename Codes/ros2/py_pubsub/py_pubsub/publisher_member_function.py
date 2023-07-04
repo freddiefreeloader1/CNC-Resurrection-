@@ -5,6 +5,7 @@ import socket
 from std_msgs.msg import String
 import serial
 import time 
+import re 
 
 global j_val
 j_val = "[0, 0]"
@@ -14,6 +15,8 @@ stepsize = 0
 hwaxis = ""
 global joyaxis 
 joyaxis = ""
+global prec
+prec = "0.3"
 
 class MinimalPublisher(Node):
 
@@ -39,13 +42,20 @@ class MinimalPublisher(Node):
         self.get_logger().info('Publishing: "%s"' % msg.data)
         self.i += 1
 def sumdigits(no):
-    return 0 if no == 0 else int(no%10) + sumdigits(int(no/10))
+    if no == 0:
+        return 0  
+    if "-" in no: 
+        return sum(map(int,re.findall(r'(\d|-\d)', no)))
+    else:
+        return sum(int(x) for x in no if x.isdigit())
+
 def main(args=None):
 
     global j_val
     global hwaxis
     global stepsize
     global joyaxis 
+    global prec
     com = serial.Serial('/dev/ttyUSB0',baudrate=115200)
     com.write(str.encode("\r\n\r\n")) # wake up grbl
    
@@ -83,6 +93,7 @@ def main(args=None):
             if dataFromClient.replace("HB","") != "":
                 minimal_publisher.publish_data(dataFromClient.replace("HB",""))
 
+        ############################################## for CNC purposes
         if dataFromClient == "X":
             hwaxis = "X"
         if dataFromClient == "Y":
@@ -95,40 +106,58 @@ def main(args=None):
             joyaxis = "Y"
         if "|XY" in dataFromClient:
             joyaxis = "XY"
+            
+        if dataFromClient == "P0.3":
+            prec = "0.3"
+        if dataFromClient == "P0.5":
+            prec = "0.5"
+        if dataFromClient == "P0.7":
+            prec = "0.7"
+        if dataFromClient == "P1":
+            prec = "1"
 
         if hwaxis == "X":
-            if dataFromClient.isdigit():
-                stepsize = sumdigits(int(dataFromClient))
-                for i in range(stepsize):
-                    print("h")
-                    com.write(str.encode("G91 G0 X0.3\r\n"))
-            elif "-" in dataFromClient:
-                datahw = dataFromClient.replace("-","")
-                if datahw.isdigit():
-                    stepsize = sumdigits(int(datahw))
+            datahw = dataFromClient.replace("-","")
+            if datahw.isdigit():
+                stepsize = sumdigits(dataFromClient)
+                print(stepsize)
+                if stepsize > 0:
                     for i in range(stepsize):
-                        print("h")
-                        com.write(str.encode("G91 G0 X-0.3\r\n"))
+                        com.write(str.encode("G91 G0 X" + prec + "\r\n"))
+                elif stepsize < 0:
+                    for i in range(-stepsize):
+                        com.write(str.encode("G91 G0 X-" + prec + "\r\n"))
 
         if hwaxis == "Y":
-            if dataFromClient.isdigit():
-                stepsize = sumdigits(int(dataFromClient))
-                for i in range(stepsize):
-                    com.write(str.encode("G91 G0 Y0.3\r\n"))
-            elif "-" in dataFromClient:
-                datahw = dataFromClient.replace("-","")
-                if datahw.isdigit():
-                    stepsize = sumdigits(int(datahw))
+            datahw = dataFromClient.replace("-","")
+            if datahw.isdigit():
+                stepsize = sumdigits(dataFromClient)
+                print(stepsize)
+                if stepsize > 0:
                     for i in range(stepsize):
-                        print("h")
-                        com.write(str.encode("G91 G0 Y-0.3\r\n"))
+                        com.write(str.encode("G91 G0 Y" + prec + "\r\n"))
+                elif stepsize < 0:
+                    for i in range(-stepsize):
+                        com.write(str.encode("G91 G0 Y-" + prec + "\r\n"))
 
+
+        if hwaxis == "Z":
+            datahw = dataFromClient.replace("-","")
+            if datahw.isdigit():
+                stepsize = sumdigits(dataFromClient)
+                print(stepsize)
+                if stepsize > 0:
+                    for i in range(stepsize):
+                        com.write(str.encode("G91 G0 Z" + prec + "\r\n"))
+                elif stepsize < 0:
+                    for i in range(-stepsize):
+                        com.write(str.encode("G91 G0 Z-" + prec + "\r\n"))
 
         # print(dataFromClient)
         ######################################### joystick
         if joyaxis == "X" or joyaxis == "XY":
 
-            if dataFromClient == "[0, 0]":
+            if "[0, 0" in dataFromClient:
                 j_val = "[0, 0]"
 
             if dataFromClient == "[0, 0]" or j_val == "[0, 0]":
@@ -137,17 +166,17 @@ def main(args=None):
 
             if dataFromClient == "[1, 0]" or j_val == "[1, 0]":
                 j_val = "[1, 0]"
-                com.write(str.encode("G91 G0 X0.3\r\n"))
+                com.write(str.encode("G91 G0 X-0.3\r\n"))
             
-            if dataFromClient == "[0, 0]" or j_val == "[0, 0]":
+            if "[0, 0" in dataFromClient or j_val == "[0, 0]":
                 j_val = "[0, 0]"
                 com.write(str.encode("G91 G0 X0\r\n"))
     
             if dataFromClient == "[-1, 0]" or j_val ==  "[-1, 0]":
                 j_val = "[-1, 0]"
-                com.write(str.encode("G91 G0 X-0.3\r\n"))
+                com.write(str.encode("G91 G0 X0.3\r\n"))
 
-            if dataFromClient == "[0, 0]" or j_val == "[0, 0]":
+            if "[0, 0" in dataFromClient or j_val == "[0, 0]":
                 j_val = "[0, 0]"
                 com.write(str.encode("G91 G0 X0\r\n")) 
 
@@ -156,7 +185,7 @@ def main(args=None):
             if dataFromClient == "[0, 1]" or j_val == "[0, 1]":
                 j_val = "[0, 1]"
                 com.write(str.encode("G91 G0 Y0.3\r\n"))
-            if dataFromClient == "[0, 0]" or j_val == "[0, 0]":
+            if "[0, 0" in dataFromClient or j_val == "[0, 0]":
                 j_val = "[0, 0]"
                 com.write(str.encode("G91 G0 X0\r\n"))  
 
@@ -168,26 +197,26 @@ def main(args=None):
 
             if dataFromClient == "[-1, 1]" or j_val ==  "[-1, 1]":
                 j_val = "[-1, 1]"
-                com.write(str.encode("G91 G0 X-0.3 Y0.3\r\n"))
+                com.write(str.encode("G91 G0 X0.3 Y0.3\r\n"))
 
-            if dataFromClient == "[0, 0]" or j_val == "[0, 0]":
+            if "[0, 0" in dataFromClient or j_val == "[0, 0]":
                 j_val = "[0, 0]"
                 com.write(str.encode("G91 G0 X0 Y0\r\n"))
 
             if dataFromClient == "[1, 1]" or j_val == "[1, 1]":
                 j_val = "[1, 1]"
-                com.write(str.encode("G91 G0 X0.3 Y0.3\r\n"))
-            if dataFromClient == "[0, 0]" or j_val == "[0, 0]":
+                com.write(str.encode("G91 G0 X-0.3 Y0.3\r\n"))
+            if "[0, 0" in dataFromClient or j_val == "[0, 0]":
                 j_val = "[0, 0]"
                 com.write(str.encode("G91 G0 X0\r\n"))  
 
             if dataFromClient == "[1, -1]" or j_val ==  "[1, -1]":
                 j_val = "[1, -1]"
-                com.write(str.encode("G91 G0 X0.3 Y-0.3\r\n"))
+                com.write(str.encode("G91 G0 X-0.3 Y-0.3\r\n"))
             if dataFromClient == "[-1, -1]" or j_val ==  "[-1, -1]":
                 j_val = "[-1, -1]"
-                com.write(str.encode("G91 G0 X-0.3 Y-0.3\r\n"))
-        ################################################## encoder
+                com.write(str.encode("G91 G0 X0.3 Y-0.3\r\n"))
+        ############################################################################3
 
     
         
