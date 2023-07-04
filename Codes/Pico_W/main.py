@@ -296,16 +296,16 @@ while True:
     if data_joy != old_joy:                                # if the list changed, then check what direction
         if data_joy == "[0, 1]":                        # if y direction is upwards increase the menu count
             menu_count += 1
-        if data_joy == "[0, -1]":
+        if data_joy == "[0, -1]":                       # if y direction is downwards decrease the menu count
             menu_count -= 1
-        if menu_count < 0:
+        if menu_count < 0:                              # if menu count gets over the lenght of the menu, go to the end or the beginning 
             menu_count = len(menu)
         if menu_count > len(menu):
             menu_count = 0
     for item in menu:
-        lcd(tft,item, 50,60 + 20*(menu.index(item)),30000)
+        lcd(tft,item, 50,60 + 20*(menu.index(item)),30000)             # display the menu items
     tft.fill_rect(20,80,20,70,0)
-    if menu_count == 0:
+    if menu_count == 0:                                                # display the selector on lcd
         tft.fill_rect(20,80,20,70,0)
         lcd(tft,".",30,60,10000)
     if menu_count == 1:
@@ -317,7 +317,7 @@ while True:
     if menu_count == 3:
         tft.fill_rect(20,50,20,70,0)
         lcd(tft,".",30,120,10000)
-    if counterjoy == 1 and menu_count == 0:
+    if counterjoy == 1 and menu_count == 0:                        # if the button is pressed and menu count is on specified function, go to that function
         tft.fill(0)
         counterjoy = 0
         CNC()
@@ -338,7 +338,7 @@ while True:
         other3()
         tft.fill(0)
         
-    old_joy = data_joy
+    old_joy = data_joy                            # to compare the old joystick direction list to the new one    
     time.sleep(0.001)
 
 
