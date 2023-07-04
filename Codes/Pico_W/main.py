@@ -9,7 +9,7 @@ from math import *
 import network
 import socket
 ################################################ LCD
-spi = SPI(0, baudrate=60000000, sck=Pin(6), mosi=Pin(3))
+spi = SPI(0, baudrate=60000000, sck=Pin(6), mosi=Pin(3))   # define the lcd pins
 tft = gc9a01.GC9A01(
     spi,
     dc=Pin(18, Pin.OUT),
@@ -20,8 +20,8 @@ tft.fill(0)
 ################################################# CONNECTION
 wlan = network.WLAN(network.STA_IF)
 wlan.active(True)
-wlan.connect("mechalab_intra" ,"mechastudent")
-time.sleep(15)
+wlan.connect("mechalab_intra" ,"mechastudent")        # enter your own network information
+time.sleep(15)                                        # waiting time for wifi connection
 print(wlan.isconnected())
 if wlan.isconnected() == True:
     lcd(tft, "wifi: Active", 10,100,15000)
@@ -31,13 +31,13 @@ else:
     time.sleep(2)
 
 # # # # # # # # ############################## opening socket
-SERVER_IP = '192.168.1.100'
-PORT = 5151   
+SERVER_IP = '192.168.1.100'                        # learn you global ıp from ifconfig, not the local one! 
+PORT = 5151                                        # select the port you want to use, preferably bigger than 1000, choose an unused one 
 # Create a socket object
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 # Connect to the server socket
-try:
+try:                                                # try expect makes the code try again if the connection is not succesful
     client_socket.connect((SERVER_IP, PORT))
 except OSError as e:
     print(f"Error connecting to server: {e}")
@@ -48,12 +48,12 @@ except OSError as e:
 ButtonR = Pin(15,Pin.IN,Pin.PULL_UP)
 
 
-global flag_R
+global flag_R                    # for debouncing 
 global counter
 global axis
 
-axis = ["X","Y","Z"]
-counter = 0
+axis = ["X","Y","Z"]                # define the axis list for CNC 
+counter = 0                        # define the index counter for the axis list
 def callback_R(ButtonR):
     global flag_R
     global counter
@@ -83,8 +83,8 @@ global flag_Y
 global counterY
 global axisJ
 
-axisJ = ["|X| ","|Y| ","|XY|"]
-counterY = 0
+axisJ = ["|X| ","|Y| ","|XY|"]             # define the axis list for the joystick
+counterY = 0                               # counter for joystick axis
 def callback_Y(ButtonY):
     global flag_Y
     global counterY
@@ -110,10 +110,10 @@ ButtonY.irq(trigger = Pin.IRQ_RISING, handler = callback_Y)
 Buttonjoy = Pin(21,Pin.IN,Pin.PULL_UP)
 
 global counterjoy
-global flag_joy
+global flag_joy                        # debouncing 
 
-counterjoy = 0
-
+counterjoy = 0                        # this is the variable for the selection of menu items, when it is 1 the function is selected in the menu
+                    
 def callback_joy(Buttonjoy):
     global flag_joy
     global counterjoy
@@ -122,7 +122,7 @@ def callback_joy(Buttonjoy):
     time.sleep(0.01)
     if flag_joy is 0 and Buttonjoy.value() == 1:
         flag_joy = 0
-        counterjoy = 1
+        counterjoy = 1                # when button is released, make the code select the function
         print(counterjoy)
 
 
@@ -133,12 +133,12 @@ flag_joy = Buttonjoy.value()
 
 Buttonjoy.irq(trigger = Pin.IRQ_RISING, handler = callback_joy)
 
-vrx = ADC(Pin(27))
+vrx = ADC(Pin(27))                # defining the x and y axis for the joystick, and also define the battery pin for analog read
 vry = ADC(Pin(28))
 bat = ADC(Pin(26))
 
 
-def create_array(xval,yval):
+def create_array(xval,yval):            # based on some predefined limits, create an direction array for the joystick, e.g. [1, 0] represents positive X direction
     xnum = 0
     ynum = 0
     if xval > 63000:
@@ -152,37 +152,37 @@ def create_array(xval,yval):
     return [xnum,ynum]
 #######################################################################################################
 ###############################
-def interruption_handler(timer):
+def interruption_handler(timer):                                
     client_socket.send("HB".encode())
 
 
-soft_timer = Timer(mode=Timer.PERIODIC, period=5, callback=interruption_handler)
+soft_timer = Timer(mode=Timer.PERIODIC, period=5, callback=interruption_handler)            # timer interrupt sends heartbeat at every 5 ms, can configure with changing the period value
 ################################Buzzer
-buzz = PWM(Pin(10))
-buzz.freq(1000)
+buzz = PWM(Pin(10))                    # defining buzzer pins
+buzz.freq(1000)                        # defining buzzer freq
 ###############################
 
 
-r = RotaryIRQ(pin_num_clk=13,
+r = RotaryIRQ(pin_num_clk=13,            # used an rotary encoder library to use as a quadrate encoder using two QRD's. Define the pins you use for the QRD's in here
               pin_num_dt=22,
               min_val=0,
               max_val=36,
               reverse=False,
               range_mode=RotaryIRQ.RANGE_WRAP)
 
-data = {"joystick":"", "encoder":"","axis":"","axisJ":""}
-val_old = 0
-tft.fill(0)
+data = {"joystick":"", "encoder":"","axis":"","axisJ":""}        # create data dictionary for sending it 
+val_old = 0                                                    
+tft.fill(0)            # clear the lcd
 old_val_new = 0
 data_k = ""
-old_data = {"joystick":"", "encoder":"","axis":"","axisJ":""}
+old_data = {"joystick":"", "encoder":"","axis":"","axisJ":""}        # used for comparing the new data to old data in order to send message at each change in data
 lcd(tft, "Socket: Active", 10,130,15000)
 time.sleep(1)
 tft.fill(0)
-client_socket.send("X".encode())
+client_socket.send("X".encode())                        # send initial axis info to socket 
 time.sleep(0.5)
 def CNC():
-    global counterjoy
+    global counterjoy                                # defining global variables for comparing the old data to new data
     global val_new
     global old_val_new
     global val_old
@@ -191,20 +191,20 @@ def CNC():
     global data_k
     global data_j
     while True:
-        batPer = int(bat.read_u16()*100/65535)
+        batPer = int(bat.read_u16()*100/65535)                    # read battery, joystick, and encoder values
         xval = vrx.read_u16()
         yval = vry.read_u16()
-        data_j = str(create_array(xval,yval))
-        val_new = r.value()
-        lcd(tft,axisJ[counterY],105,70,10000)
+        data_j = str(create_array(xval,yval))                # joystick direction list
+        val_new = r.value()                                # encoder value
+        lcd(tft,axisJ[counterY],105,70,10000)                    # display all the information on lcd
         lcd(tft,axis[counter],80,70,10000)
         lcd(tft,"%",106,180,15000)
         lcd(tft,"Bat",100,150,30000)
         lcd(tft,str(batPer),120,180,15000)  
-        if val_old != val_new:
-            client_socket.send(str(data["encoder"]).encode())
+        if val_old != val_new:                                    # check if the encoder value changed
+            client_socket.send(str(data["encoder"]).encode())    # if changed send the value
             buzz.duty_u16(50000)
-            lcd(tft,".",int(90*cos(old_val_new/5.75))+110,int(90*sin(old_val_new/5.75)+110),0)
+            lcd(tft,".",int(90*cos(old_val_new/5.75))+110,int(90*sin(old_val_new/5.75)+110),0)            
 
             tft.fill_rect(100, 110, 70,30, 0)
             if (val_new - val_old) < 0:
