@@ -91,7 +91,7 @@ def callback_Y(ButtonY):
     ButtonY.irq(handler = None)
 
     time.sleep(0.01)
-    if flag_Y is 0 and ButtonY.value() == 1:
+    if flag_Y is 0 and ButtonY.value() == 1:                        # debouncing code
         # print("Interrupt has occured")
         flag_Y = 0
         counterY = counterY + 1
@@ -202,27 +202,28 @@ def CNC():
         lcd(tft,"Bat",100,150,30000)
         lcd(tft,str(batPer),120,180,15000)  
         if val_old != val_new:                                    # check if the encoder value changed
-            client_socket.send(str(data["encoder"]).encode())    # if changed send the value
-            buzz.duty_u16(50000)
-            lcd(tft,".",int(90*cos(old_val_new/5.75))+110,int(90*sin(old_val_new/5.75)+110),0)            
+               
+            buzz.duty_u16(50000)                                # create a sound everytime the encoder value changes
+            lcd(tft,".",int(90*cos(old_val_new/5.75))+110,int(90*sin(old_val_new/5.75)+110),0)        # delete the point on the lcd that represents the previous encoder position        
 
             tft.fill_rect(100, 110, 70,30, 0)
-            if (val_new - val_old) < 0:
+            if (val_new - val_old) < 0:                                            # calculate the encoder step size value. the every step in encoder corresponds to 10 degrees in lcd
                 data["encoder"] = -((-(val_new - val_old))%36)
             else:
                 data["encoder"] = (val_new - val_old)%36
+            client_socket.send(str(data["encoder"]).encode())     # if encoder value changed send the value through socket 
             print(data["encoder"])
-            val_old = val_new
+            val_old = val_new                                      # assign val_old for comparison
             # print('result =', val_new)
             data_k = str(val_new*10)
-            lcd(tft,data_k,100,110,30000)
-            lcd(tft,".",int(90*cos(val_new/5.75))+110,int(90*sin(val_new/5.75)+110),4000)
+            lcd(tft,data_k,100,110,30000)                        # display the angle value on lcd
+            lcd(tft,".",int(90*cos(val_new/5.75))+110,int(90*sin(val_new/5.75)+110),4000)            # display a point on the lcd that represents the encoder position as a reference   
             old_val_new = val_new
         buzz.duty_u16(0)
-        data["joystick"] = data_j
+        data["joystick"] = data_j                                            # assign the information to data dictionary 
         data["axis"] = axis[counter]
         data["axisJ"] = axisJ[counterY]
-        if data["joystick"] != old_data["joystick"]:
+        if data["joystick"] != old_data["joystick"]:                           # compare the old data dict with the new one, if anything changed send the changed information through socket
             client_socket.send(str(data["joystick"]).encode())
         if data["axis"] != old_data["axis"]:
             client_socket.send(str(data["axis"]).encode())
@@ -230,40 +231,40 @@ def CNC():
             client_socket.send(str(data["axisJ"]).encode())
         
         
-        old_data = data.copy()
-        if counterjoy == 1:
+        old_data = data.copy()                            # create old_data at each iteration
+        if counterjoy == 1:                                # if joystick button is pressed break the loop and return to main menu
             counterjoy = 0
             tft.fill(0)
             break
         time.sleep(0.04)
     
-global prec 
-prec = [0.3, 0.5, 0.7, 1]
-val_prec = 0
-old_val_prec = 0
-
+global prec                                             # define precision value for CNC
+prec = [0.3, 0.5, 0.7, 1]                                # precision list that can be configured
+val_prec = 0                                        
+old_val_prec = 0                        # for comparison of the old and new
+    
 def other1():
     global counterjoy
     global prec
     global val_prec
     global old_val_prec
     while True:
-        lcd(tft,"CNC Precision",20,80,15000)
-        val_prec = (r.value())%len(prec)
-        if val_prec < 0:
+        lcd(tft,"CNC Precision",20,80,15000)                    # display the title
+        val_prec = (r.value())%len(prec)                        # val_prec should be in the range 0 and len(prec)
+        if val_prec < 0:                                        # if it becomes smaller than 0, return to the last element of the prec list 
             val_prec = len(prec)
         lcd(tft,str(prec[val_prec]),80,120,45000)
-        if old_val_prec != val_prec:
-            tft.fill_rect(80,120,50,50,0)
+        if old_val_prec != val_prec:                            # if anything changed then send the new prec value
+            tft.fill_rect(80,120,50,50,0)                        # delete the old prec value on lcd
             client_socket.send(("P" + str(prec[val_prec])).encode())
             print(prec[val_prec])
-        if counterjoy == 1:
+        if counterjoy == 1:                                # if button joy is pressed, return to main menu
             counterjoy = 0
             tft.fill(0)
             break
         old_val_prec = val_prec
         
-def other2():
+def other2():                                                # these functions are configurable for other uses, here you can define your own functions to suit your needs
     global counterjoy    
     while True:
         lcd(tft,"Mini Robot",50,80,15000)
@@ -283,17 +284,17 @@ def other3():
 tft.fill(0)
 y = 40
 global menu_count
-menu_count = 0
+menu_count = 0                                            # keeping track of which menu item we are in 
 old_joy = 0
-menu = ["CNC","CNC Prec","Mini Robot","Drone"]
+menu = ["CNC","CNC Prec","Mini Robot","Drone"]            # define the menu
 
 while True:
-    counterjoy = 0
-    xvalmenu = vrx.read_u16()
+    counterjoy = 0                                        # selection of menu items
+    xvalmenu = vrx.read_u16()                
     yvalmenu = vry.read_u16()
-    data_joy = str(create_array(xvalmenu,yvalmenu))
-    if data_joy != old_joy:
-        if data_joy == "[0, 1]":
+    data_joy = str(create_array(xvalmenu,yvalmenu))       # create direction list for joystick for going through the menu
+    if data_joy != old_joy:                                # if the list changed, then check what direction
+        if data_joy == "[0, 1]":                        # if y direction is upwards increase the menu count
             menu_count += 1
         if data_joy == "[0, -1]":
             menu_count -= 1
