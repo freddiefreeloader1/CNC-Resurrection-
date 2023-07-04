@@ -66,7 +66,7 @@ def main(args=None):
 
     rclpy.init(args=args)
 
-    minimal_publisher = MinimalPublisher("trial")
+    minimal_publisher = MinimalPublisher("CNC")
     heart_beat_publisher = MinimalPublisher("heartbeat")
 
     while(True):
@@ -84,6 +84,7 @@ def main(args=None):
         dataFromClient = str(clientConnected.recv(1024).decode())
         
         if "HB" in dataFromClient:
+            heart_beat_publisher.publish_data("HB")
             dataFromClient = dataFromClient.replace("HB","")
 
         # print(j_val)
