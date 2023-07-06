@@ -1,0 +1,9 @@
+To set up the UGS start with downlading the ugs from https://winder.github.io/ugs_website/
+For linux users, you might need to open the serial port from terminal. To do that, write this code to the terminal:
+--sudo chmod a+rw /dev/ttyUSB0
+PLEASE NOTE THAT SETTINGS OF GRBL HAS ALREADY WRITTEN ON ARDUINO UNO. CHECK THE SETTINGS BEFORE CHANGING IT.
+After connecting the GRBL arduino to the UGS, setup vizard parameters are as follows:
+--Reverse X direction
+--All axes have same step size 800pulse/min
+After doing the settings you can start using the CNC milling machine. Enjoy!
+While using the milling machine, do not set feed more than 100mm/min because, stepper motors cannot catch faster feed rates than that.
