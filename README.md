@@ -20,6 +20,8 @@ Do not increase feed rate more than 100mm/min. It staggers motors because motors
 
 REMOTE CONTROLLER DOCUMENTATION:
 
+![image](https://github.com/freddiefreeloader1/CNC-Resurrection-/assets/69372260/136cd479-13cd-4fee-a907-c1a98e1ffbf9)
+
 The Remote Controller project is an innovative and versatile solution designed to provide enhanced control and convenience for various applications. With a range of functional features, this project offers a seamless remote control experience for different devices and systems.
 
 The centerpiece of the Remote Controller project is the GC9A01 round LCD display, which serves as the primary interface. This high-resolution display showcases a user-friendly menu system and subfunctions, allowing users to navigate through different options and select desired actions with ease.
