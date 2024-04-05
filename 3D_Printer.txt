@@ -1,6 +1,0 @@
--Yazıcı nozzleı temizlendi bir süre düzgün çalıştı yeniden tıkantı.
--Yazıcı nozzeleı değişti ve yedeklendi.
--Yazıcı filament vermşyordu, dişli kutusu sökülüp temizlendi yeniden takıldı filament veriyor.
--Tabla ayarı bozuktu yeniden yapıldı şu an düzgün çalışıyor.
--Test baskıları düzgün çıktı.
--Tablaya parçalar yağışmadığından düzgün çıkmıyordu asetonla temizlendi, sonrasında da çok yapıştığı için çıkarmak zorlaştı spatula alındı laba koyuldu.
